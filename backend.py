@@ -60,18 +60,18 @@ def chat_with_bot(request: ChatRequest):
     if not rag_chain:
         return {"answer": "Error: RAG chain not initialized."}
 
-    # Convert history
-    lc_chat_history: List[BaseMessage] = [
-        HumanMessage(content=m.content) if m.role == "user" else AIMessage(content=m.content)
-        for m in request.chat_history
-    ]
+    # Convert history to string for ReAct prompt
+    history_str = ""
+    for m in request.chat_history:
+        role = "User" if m.role == "user" else "Assistant"
+        history_str += f"{role}: {m.content}\n"
 
     try:
         response = rag_chain.invoke({
-            "chat_history": lc_chat_history,
+            "chat_history": history_str,
             "input": request.input
         })
-        return {"answer": response.get("answer", "Sorry, I couldn't find an answer.")}
+        return {"answer": response.get("output", "Sorry, I couldn't find an answer.")}
     except Exception as e:
         print(f"Error during chat: {e}")
         return {"answer": f"Internal error: {e}"}

@@ -58,30 +58,37 @@ def create_vector_db_advanced():
     print(f"[Phase 3/4] Found {len(csv_files)} CSV table files.")
     for file_path in tqdm(csv_files, desc="Loading CSVs"):
         text = csv_to_text(file_path)
-        if text:
-            try:
-                # Create a Document object directly from the CSV text
-                doc = Document(
-                    page_content=text,
-                    metadata={"source": file_path}
-                )
-                all_documents.append(doc)
-            except Exception as e:
-                print(f"[ERROR] CSV load failed {file_path}: {e}")
-                failed_files.append(file_path)
-
+        if text and text.strip():
+            all_documents.append(Document(page_content=text, metadata={"source": file_path}))
+    
+    # Filter out any documents with empty content
+    print(f"[Phase 4/4] Filtering empty documents...")
+    all_documents = [doc for doc in all_documents if doc.page_content and isinstance(doc.page_content, str) and doc.page_content.strip()]
+    
+    print(f"Splitting {len(all_documents)} documents into chunks...")
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1500,
+        chunk_overlap=200
+    )
+    
     if not all_documents:
-        print("No documents loaded. Scraper may not have run. Exiting.")
+        print("No documents loaded after filtering. Exiting.")
         return
 
-    # Split into chunks - larger chunks reduce noise from navigation elements
-    print("[Phase 4/4] Splitting documents into chunks...")
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1500,  # Increased to reduce fragmentation
-        chunk_overlap=200  # Increased overlap for better context
-    )
     chunks = text_splitter.split_documents(all_documents)
     print(f"Total chunks created: {len(chunks)}")
+    
+    # Validation: Ensure all chunks have valid content
+    valid_chunks = []
+    for chunk in chunks:
+        if chunk.page_content and isinstance(chunk.page_content, str) and chunk.page_content.strip():
+            valid_chunks.append(chunk)
+    
+    print(f"Valid chunks after filtering: {len(valid_chunks)} (Removed {len(chunks) - len(valid_chunks)})")
+    
+    if not valid_chunks:
+        print("No valid chunks to serve. Exiting.")
+        return
 
     # Create embeddings + FAISS store
     print("Creating embeddings and FAISS vector store...")
@@ -90,7 +97,7 @@ def create_vector_db_advanced():
         model_kwargs={'device': 'cpu'}
     )
 
-    db = FAISS.from_documents(chunks, embeddings)
+    db = FAISS.from_documents(valid_chunks, embeddings)
     db.save_local(DB_FAISS_PATH)
     print(f"FAISS index saved at '{DB_FAISS_PATH}'")
 

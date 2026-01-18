@@ -1,20 +1,16 @@
-# For web scraping (main.py)
 requests
 pandas
 beautifulsoup4
 tqdm
 pypdf
-
-# For AI and data ingestion (ingest.py & chatbot.py)
-langchain
-langchain-core
-langchain-community
-langchain-text-splitters
-langchain-huggingface
-langchain-ollama
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-core>=0.3.0
+langchain-groq>=0.2.0
+langchain-huggingface>=0.1.0
+langchain-text-splitters>=0.3.0
+duckduckgo-search
+ddgs
 sentence-transformers
 faiss-cpu
 python-dotenv
-
-# For the chatbot UI (chatbot.py)
-streamlit

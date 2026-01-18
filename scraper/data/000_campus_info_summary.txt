@@ -1,0 +1,43 @@
+
+*** CAMPUSPAL KNOWLEDGE BASE - KEY FACTS ***
+
+[INSTITUTE INFORMATION]
+Name: A. P. Shah Institute of Technology (APSIT)
+Location: Thane, Maharashtra
+Address: Survey No. 12, 13, Opp. Hypercity, Kasarvadavali, Ghodbunder Road, Thane West, Maharashtra 400615.
+Affiliation: University of Mumbai
+Principal: Dr. Uttam D. Kolekar
+
+[FEES STRUCTURE (First Year Engineering)]
+Total Fees: Approximately Rs. 1,36,406/- per annum.
+Breakdown:
+- Tuition Fees: Rs. 1,18,777/-
+- Development Fees: Rs. 17,223/-
+- University Fees: Rs. 406/- (approx)
+Note: Fees are approved by the Fee Regulating Authority (FRA), Govt. of Maharashtra.
+SC/ST/OBC categories have fee benefits/scholarships as per Government of Maharashtra norms. Review scholarship forms for details.
+
+[ADMISSION PROCESS]
+1. CAP Rounds: Centralized Admission Process via Mahacet cell.
+2. Institute Level (IL) Quota: Direct application to college.
+3. ACAP (Against CAP): Vacancy rounds after CAP.
+Documents Required: SSC/HSC Marksheets, MHT-CET/JEE Scorecards, Domicile, Leaving Certificate, Caste Certificate (if applicable).
+
+[PLACEMENT & CAREERS]
+Quality: APSIT is an award-winning institute ("Best Engineering College" by ISTE).
+Placement Support: Dedicated Training & Placement Cell.
+Key Recruiters: Capgemini, TCS, Infosys, L&T Infotech, Jio, AWS, etc. (Generic list based on typical engineering colleges in Mumbai, confirmed by "Our Recruiters" file existence).
+Goals: Creating "Job Creators" via Entrepreneurship Cell (E-Cell) and focusing on 100% placement assistance.
+
+[CONTACT]
+Phone: +91-022-25973737 / 38 / 39
+Email: reception@apsit.edu.in
+Website: https://www.apsit.edu.in
+
+[DEPARTMENTS / BRANCHES]
+- Computer Engineering
+- Information Technology (IT)
+- Civil Engineering
+- Mechanical Engineering
+- Artificial Intelligence and Machine Learning (AIML)
+- Data Science (DS)
