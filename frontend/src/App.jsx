@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import Markdown from 'react-markdown';
 import logo from './logo.jpg';
 
 
@@ -152,7 +153,7 @@ const ChatHistoryViewer = ({ isOpen, onClose, messages, onDeleteMessages }) => {
   const stats = getStorageStats();
 
   return (
-    <div className="sticky inset-0 z-50 flex items-center sm:items-center justify-center animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center sm:items-center justify-center animate-fade-in pointer-events-auto">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -283,7 +284,7 @@ const DeleteModal = ({ isOpen, onConfirm, onCancel }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in pointer-events-auto">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
@@ -456,42 +457,74 @@ const CopyButton = ({ text }) => {
 };
 
 /**
- * Renders a single chat message bubble.
- * @param {{role: 'user' | 'assistant', content: string, ts?: number}} message - The message object to render.
+ * Individual Chat Message Component
  */
-const ChatMessage = ({ message }) => {
-  const { role, content, ts } = message;
-  const isUser = role === 'user';
-  const timeString = ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
+const ChatMessage = memo(({ msg }) => {
+  const isUser = msg.role === 'user';
+  
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full`}>
-      <div className={`flex items-end gap-2 sm:gap-3 max-w-[85%] sm:max-w-3xl ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-        <Avatar role={role} />
-        <div className="flex flex-col items-start max-w-full min-w-0">
-          <div
-            className={`px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-md border ${
-              isUser
-                ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white border-blue-700 rounded-br-sm'
-                : 'bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-100 border-gray-200 dark:border-slate-700 rounded-bl-sm'
-            }`}
-            style={{ wordBreak: 'break-word' }}
-          >
-            <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-base">{content}</p>
-            {!isUser && (
-              <div className="mt-2">
-                <CopyButton text={content} />
-              </div>
-            )}
+    <div className={`flex w-full mb-6 animate-slide-up ${isUser ? 'justify-end' : 'justify-start'}`}>
+      
+      {/* Avatar for Bot */}
+      {!isUser && (
+        <div className="flex-shrink-0 mr-3 mt-1">
+          <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white shadow-lg ring-2 ring-white/20 dark:ring-white/5">
+             <img src={logo} alt="Bot" className="w-5 h-5 object-contain" />
           </div>
-          {timeString && (
-            <span className={`mt-1 text-xs ${isUser ? 'text-blue-700/80 dark:text-blue-300/80' : 'text-slate-500 dark:text-slate-400'}`}>{timeString}</span>
+        </div>
+      )}
+
+      <div className={`flex flex-col max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`}>
+        
+        {/* Name & Time */}
+        <div className={`flex items-center gap-2 mb-1 px-1 ${isUser ? 'flex-row-reverse' : ''}`}>
+           <span className="text-[10px] font-bold tracking-wide uppercase text-slate-500 dark:text-slate-400">
+             {isUser ? 'You' : 'CampusPal'}
+           </span>
+           <span className="text-[10px] text-slate-400 dark:text-slate-500">
+             {new Date(msg.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+           </span>
+        </div>
+
+        {/* Message Bubble */}
+        <div
+          className={`relative px-4 py-3 rounded-2xl shadow-sm text-sm leading-relaxed transition-all duration-300 ${
+            isUser
+              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-tr-sm shadow-blue-500/20'
+              : 'bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-slate-200 border border-slate-200/50 dark:border-slate-700/50 rounded-tl-sm'
+          }`}
+        >
+          {isUser ? (
+             <p className="whitespace-pre-wrap font-medium">{msg.content}</p>
+          ) : (
+             <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-code:text-[11px] prose-pre:bg-slate-900/50 prose-pre:backdrop-blur-sm prose-pre:border prose-pre:border-slate-700">
+               <Markdown>{msg.content}</Markdown>
+             </div>
+          )}
+          
+          {/* Action Buttons for Bot */}
+          {!isUser && (
+             <div className="mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50 flex items-center justify-end">
+                <CopyButton text={msg.content} />
+             </div>
           )}
         </div>
       </div>
+
+       {/* Avatar for User (Optional - Right side) */}
+       {isUser && (
+        <div className="flex-shrink-0 ml-3 mt-1">
+             <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shadow-md ring-2 ring-white/50 dark:ring-white/10 overflow-hidden">
+                <svg className="w-5 h-5 text-slate-400 dark:text-slate-500" fill="currentColor" viewBox="0 0 20 20">
+                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+             </div>
+        </div>
+       )}
+
     </div>
   );
-};
+});
 
 /**
  * Renders the chat message list.
@@ -524,7 +557,7 @@ const MessageList = ({ messages, isLoading, onScrolledStateChange }) => {
     <div ref={containerRef} className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-6 overscroll-contain scroll-smooth">
       <div className="mx-auto max-w-3xl space-y-4 sm:space-y-5 will-change-scroll">
         {messages.map((msg, index) => (
-          <ChatMessage key={index} message={msg} />
+          <ChatMessage key={index} msg={msg} />
         ))}
         {isLoading && (
           <div className="flex justify-start">
@@ -576,6 +609,9 @@ function App() {
   const [showHistoryViewer, setShowHistoryViewer] = useState(false);
   const [toasts, setToasts] = useState([]);
   
+  // Widget State
+  const [isOpen, setIsOpen] = useState(false);
+
   // Backend API URL
   const API_URL = 'http://localhost:8000/chat';
 
@@ -678,21 +714,14 @@ function App() {
   };
 
   const suggestionChips = [
-    'Admission process and eligibility',
-    'Fee structure and scholarships',
-    'Placements statistics and companies',
-    'Campus facilities and clubs',
+    'Admission process?',
+    'Fee structure?',
+    'Placements stats?',
+    'Facilities?',
   ];
 
   const handleChipClick = async (text) => {
     setUserInput(text);
-  };
-
-  /**
-   * Shows the delete confirmation modal
-   */
-  const handleClearHistory = () => {
-    setShowDeleteModal(true);
   };
 
   /**
@@ -739,120 +768,193 @@ function App() {
 
 
   return (
-    <div className="flex flex-col h-screen overflow-auto bg-gradient-to-b from-slate-50 via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
-      {/* Header */}
-      <header className="sticky top-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 z-10 shadow-sm">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <div className="w-10 h-10 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br grid place-items-center shadow-md flex-shrink-0">
-              <span className="text-white text-lg sm:text-base"><img src={logo} alt="Logo" /></span>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white truncate">
-                CampusPal <span className="text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">AI Assistant</span>
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">APSIT Guide</p>
-            </div>
-          </div>
-          <div className="flex items-center">
-            <DarkModeToggle darkMode={darkMode} onToggle={() => setDarkMode((v) => !v)} />
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-transparent pointer-events-none relative font-sans">
+      
+      {/* 
+        NOTE: This app is designed to be overlayed on an existing website.
+        The root container is 'pointer-events-none' so clicks pass through to the site behind it.
+        The interactive elements (Button, Chat Window) are 'pointer-events-auto'.
+      */}
 
-      {/* Message List */}
-      <main className="flex-1">
-        <MessageList
-          messages={messages}
-          isLoading={isLoading}
-          onScrolledStateChange={setShowScrollButton}
-        />
-      </main>
+      {/* --- Chat Widget --- */}
+      
+      {/* 1. Toggle Button (FAB) - Only shown when closed */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-50 group pointer-events-auto"
+          aria-label="Open Chat"
+        >
+          <div className="absolute inset-0 rounded-full bg-blue-500/50 animate-ping"></div>
+          <div className="relative p-4 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center border-2 border-white/20">
+             {/* Chat Icon */}
+             <svg className="w-8 h-8 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+          </div>
+        </button>
+      )}
 
-      {/* Suggestions (shown when user hasn't typed yet beyond greeting) */}
-      {messages.length <= 2 && (
-        <div className="px-3 sm:px-4 md:px-6 pb-2">
-          <div className="mx-auto max-w-3xl flex flex-wrap gap-2">
-            {suggestionChips.map((s) => (
-              <button
-                key={s}
+      {/* 2. Chat Window Container - Fixed Bottom Right */}
+      {isOpen && (
+        <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-[380px] h-[100dvh] sm:h-[650px] bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl sm:rounded-[2rem] shadow-2xl shadow-slate-900/20 flex flex-col border border-white/20 dark:border-white/10 animate-slide-up origin-bottom-right overflow-hidden transition-all duration-300 pointer-events-auto ring-1 ring-black/5 dark:ring-white/5">
+          
+          {/* Header */}
+          <header className="flex-shrink-0 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-5 flex items-center justify-between text-white shadow-lg relative overflow-hidden">
+            {/* Glossy Overlay */}
+            <div className="absolute inset-0 bg-white/5 opacity-50 pointer-events-none"></div>
+            
+            <div className="flex items-center gap-3 relative z-10">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-slate-700/50 backdrop-blur-md grid place-items-center border border-white/10 shadow-inner">
+                   <img src={logo} alt="Bot" className="w-7 h-7 rounded-full object-cover" /> 
+                </div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full box-content"></div>
+              </div>
+              <div className="flex flex-col">
+                <h3 className="font-bold text-base leading-tight tracking-wide drop-shadow-sm font-sans">CampusPal</h3>
+                <span className="text-[10px] font-medium text-slate-300 uppercase tracking-wider opacity-90">AI Assistant</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 relative z-10">
+                 {/* Dark Mode Toggle */}
+                  <button 
+                    onClick={() => setDarkMode(!darkMode)} 
+                    className="p-2 hover:bg-white/10 rounded-full transition-all duration-300 focus:outline-none active:scale-95"
+                    title="Toggle Theme"
+                  >
+                     {darkMode ? (
+                        <svg className="w-5 h-5 text-amber-300 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                           <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                        </svg>
+                     ) : (
+                        <svg className="w-5 h-5 text-slate-300 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                        </svg>
+                     )}
+                  </button>
+
+                   {/* History Toggle */}
+                  <button 
+                    onClick={() => setShowHistoryViewer(true)}
+                    className="p-2 hover:bg-white/10 rounded-full transition-all duration-300 focus:outline-none active:scale-95"
+                    title="History"
+                  >
+                     <svg className="w-5 h-5 text-slate-300 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+
+                  {/* Close Button */}
+                  <button 
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-all duration-300 focus:outline-none active:scale-95 ml-1"
+                  aria-label="Close Chat"
+                  >
+                  <svg className="w-6 h-6 text-slate-300 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  </button>
+            </div>
+          </header>
+
+          {/* Message List Area */}
+          <div className="flex-1 overflow-y-auto bg-transparent relative scroll-smooth">
+             <div className="absolute inset-0 bg-slate-50/50 dark:bg-slate-950/50 pointer-events-none"></div>
+             
+             <div className="relative z-10 p-4">
+                 <p className="text-center text-xs text-slate-400 dark:text-slate-500 mb-6 font-medium tracking-wide">
+                    Today, {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                 </p>
+                 <MessageList
+                    messages={messages}
+                    isLoading={isLoading}
+                    onScrolledStateChange={setShowScrollButton}
+                 />
+                 
+                 {/* Suggestions */}
+                {messages.length <= 2 && (
+                    <div className="mt-6 animate-fade-in">
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 px-2 uppercase tracking-wide">Suggested Queries</p>
+                    <div className="flex flex-wrap gap-2">
+                        {suggestionChips.map((s) => (
+                        <button
+                            key={s}
+                            type="button"
+                            onClick={() => handleChipClick(s)}
+                            className="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200/80 dark:border-slate-700/80 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:border-blue-200 dark:hover:border-slate-600 transition-all duration-200 text-left shadow-sm hover:shadow-md"
+                        >
+                            {s}
+                        </button>
+                        ))}
+                    </div>
+                    </div>
+                )}
+             </div>
+          </div>
+        
+          {/* Scroll Button */}
+            {showScrollButton && (
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 animate-bounce">
+                <button
                 type="button"
-                onClick={() => handleChipClick(s)}
-                className="px-3 py-2 rounded-full text-xs sm:text-sm border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all duration-200 ease-out touch-manipulation will-change-transform focus:outline-none"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Input Form */}
-      <footer className="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 sticky bottom-0 z-10 shadow-sm w-auto">
-        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl flex items-end gap-2 p-3 sm:p-4">
-          <label htmlFor="chat-input" className="sr-only">Type your message</label>
-          <input
-            id="chat-input"
-            type="text"
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            placeholder="Ask about admissions, placements..."
-            disabled={isLoading}
-            className="flex-1 px-3 py-3 sm:px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white/90 dark:bg-slate-800/70 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 text-sm sm:text-base touch-manipulation"
-            autoComplete="off"
-          />
-          <button
-            type="submit"
-            disabled={isLoading || !userInput.trim()}
-            className="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-3 rounded-xl font-semibold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-60 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none active:scale-95 transition-all duration-200 ease-out touch-manipulation min-w-[70px] sm:min-w-[80px] will-change-transform"
-            aria-label={isLoading ? 'Sending...' : 'Send message'}
-          >
-            {isLoading ? (
-              <Spinner className="w-5 h-5" />
-            ) : (
-              <span className="text-sm sm:text-base">Send</span>
+                onClick={() => {
+                     const lists = document.querySelectorAll('.overflow-y-auto');
+                     if(lists.length > 0) {
+                         const list = lists[lists.length - 1]; 
+                         list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
+                     }
+                }}
+                className="px-4 py-2 rounded-full bg-slate-800/90 dark:bg-slate-100/90 backdrop-blur-md text-white dark:text-slate-900 text-xs font-bold shadow-lg flex items-center gap-2 hover:scale-105 transition-transform"
+                >
+                <span>↓</span> New messages
+                </button>
+            </div>
             )}
-          </button>
-        </form>
-        {error && (
-          <p className="text-red-600 dark:text-red-400 text-xs sm:text-sm text-center mt-2 px-2">{error}</p>
-        )}
-      </footer>
 
-      {/* Scroll to bottom button */}
-      {showScrollButton && (
-        <div className="pointer-events-none fixed bottom-20 sm:bottom-24 right-4 sm:right-6 md:right-8 z-20">
-          <button
-            type="button"
-            onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-            className="pointer-events-auto inline-flex items-center gap-2 px-3 py-2 sm:px-4 rounded-full bg-slate-900 text-white dark:bg-slate-700 shadow-lg hover:opacity-90 active:scale-95 transition-all duration-200 ease-out text-xs sm:text-sm touch-manipulation will-change-transform focus:outline-none"
-            aria-label="Scroll to bottom"
-          >
-            ↓ <span className="hidden xs:inline">New messages</span>
-          </button>
+          {/* Footer Input */}
+          <div className="p-4 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-t border-slate-200/60 dark:border-slate-800/60">
+             <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
+                <input
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    placeholder="Ask anything..."
+                    disabled={isLoading}
+                    className="flex-1 pl-4 pr-12 py-3.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 text-sm shadow-inner transition-all duration-200"
+                />
+                
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
+                    <button
+                        type="submit"
+                        disabled={isLoading || !userInput.trim()}
+                        className="p-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-blue-500/30 disabled:opacity-50 disabled:shadow-none hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center w-9 h-9"
+                    >
+                        {isLoading ? (
+                            <Spinner className="w-4 h-4 text-white/90" />
+                        ) : (
+                            <svg className="w-4 h-4 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                        )}
+                    </button>
+                </div>
+             </form>
+             {error && (
+                <p className="text-red-500 text-[10px] text-center mt-2 font-medium bg-red-50 dark:bg-red-900/20 py-1 rounded-lg animate-fade-in">{error}</p>
+             )}
+             <div className="mt-2 text-center">
+                <span className="text-[10px] text-slate-400 dark:text-slate-600 font-medium">Made by AIML'26</span>
+             </div>
+          </div>
+
         </div>
       )}
 
-      {/* Floating Storage/History Button - Sticky */}
-      <div className="sticky bottom-0 left-0 right-0 pointer-events-none z-40">
-        <div className="flex justify-end p-4 sm:p-6">
-          <button
-            type="button"
-            onClick={() => setShowHistoryViewer(true)}
-            className="pointer-events-auto w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-2xl hover:shadow-blue-500/50 active:scale-95 transition-all duration-200 ease-out flex items-center justify-center will-change-transform focus:outline-none group touch-manipulation"
-            aria-label="View chat history and storage"
-            title="Chat History & Storage"
-          >
-            <svg className="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-            </svg>
-            {/* Pulse animation ring */}
-            <span className="absolute inset-0 rounded-full bg-blue-400 opacity-0 group-hover:opacity-20" />
-          </button>
-        </div>
-      </div>
 
-      {/* Chat History Viewer Modal */}
+      {/* Chat History Viewer Modal - Portaled or Global */}
+      {/* We keep it global to the app div so it overlays everything */}
       <ChatHistoryViewer
         isOpen={showHistoryViewer}
         onClose={() => setShowHistoryViewer(false)}
@@ -868,14 +970,15 @@ function App() {
       />
 
       {/* Custom Toast Notifications */}
-      <div className="fixed top-[70px] right-4 z-[9999] flex flex-col gap-3">
+      <div className="fixed top-24 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
         {toasts.map(toast => (
-          <CustomToast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            onClose={() => removeToast(toast.id)}
-          />
+          <div key={toast.id} className="pointer-events-auto">
+            <CustomToast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => removeToast(toast.id)}
+            />
+          </div>
         ))}
       </div>
     </div>
