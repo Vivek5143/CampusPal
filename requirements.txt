@@ -14,3 +14,6 @@ ddgs
 sentence-transformers
 faiss-cpu
 python-dotenv
+fastapi
+uvicorn
+python-multipart

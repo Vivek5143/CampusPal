@@ -89,6 +89,14 @@ npm run dev
 
 ---
 
+## 🚀 Deployment
+
+Want to take CampusPal live? We have a detailed guide for deploying the Backend to **Render** and Frontend to **Vercel**.
+
+👉 **[Read the Deployment Guide](DEPLOYMENT.md)**
+
+---
+
 ## 🤝 Contribution (Open to APSIT Students!)
 
 This project is **Open Source** and we welcome contributions from **all APSIT students**! 🚀

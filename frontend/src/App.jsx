@@ -612,8 +612,8 @@ function App() {
   // Widget State
   const [isOpen, setIsOpen] = useState(false);
 
-  // Backend API URL
-  const API_URL = 'http://localhost:8000/chat';
+  // Backend API URL - Uses environment variable for production, localhost for dev
+  const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000') + '/chat';
 
   // Save chat history to localStorage whenever messages change
   useEffect(() => {
