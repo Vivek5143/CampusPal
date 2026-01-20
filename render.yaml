@@ -1,9 +1,9 @@
 services:
   - type: web
     name: campuspal-backend
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn backend:app --host 0.0.0.0 --port $PORT
+    env: docker
+    dockerContext: .
+    # buildCommand/startCommand are ignored for docker, used from Dockerfile
     envVars:
       - key: GROQ_API_KEY
         sync: false

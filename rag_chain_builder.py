@@ -3,16 +3,17 @@ from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.agents import initialize_agent, AgentType
+from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.tools.retriever import create_retriever_tool
 from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.prompts import ChatPromptTemplate
 
 load_dotenv()
 DB_FAISS_PATH = "vectorstore/db_faiss"
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 def build_chain():
-    """Builds and returns a Hybrid Agent using initialize_agent (Legacy Compatible)."""
+    """Builds and returns a Hybrid Agent (Groq Llama 3) using Tool Calling."""
     if not GROQ_API_KEY:
         raise ValueError("GROQ_API_KEY not found in .env")
 
@@ -48,16 +49,26 @@ def build_chain():
 
     tools = [campus_tool, web_tool]
 
-    # 4. Initialize Agent (Legacy Mode for Compatibility)
-    # CHAT_ZERO_SHOT_REACT_DESCRIPTION works well with Chat models
-    agent_executor = initialize_agent(
-        tools,
-        llm,
-        agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-        verbose=True,
+    # 4. Create Tool Calling Agent Prompt
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are CampusPal, an AI assistant for APSIT. "
+                   "Use 'campus_retriever' for college info and 'web_search' for broader queries. "
+                   "If you don't know, say so."),
+        ("placeholder", "{chat_history}"),
+        ("human", "{input}"),
+        ("placeholder", "{agent_scratchpad}"),
+    ])
+
+    # 5. Initialize Agent with Tool Calling
+    agent = create_tool_calling_agent(llm, tools, prompt)
+    
+    agent_executor = AgentExecutor(
+        agent=agent, 
+        tools=tools, 
+        verbose=True, 
         handle_parsing_errors=True,
         max_iterations=5
     )
 
-    print("Hybrid Agent (Groq Llama 3) initialized successfully.")
+    print("Hybrid Agent (Groq + Tool Calling) initialized successfully.")
     return agent_executor
