@@ -1,11 +1,1 @@
-services:
-  - type: web
-    name: campuspal-backend
-    env: docker
-    dockerContext: .
-    # buildCommand/startCommand are ignored for docker, used from Dockerfile
-    envVars:
-      - key: GROQ_API_KEY
-        sync: false
-      - key: PYTHON_VERSION
-        value: 3.10.12
+Render deployment config for campuspal-backend
